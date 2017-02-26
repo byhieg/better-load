@@ -1,0 +1,2 @@
+# README
+本项目是基于retrofit的文件上传下载库，在Android上实现文件的上传以及下载
