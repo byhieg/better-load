@@ -1,4 +1,4 @@
-package cn.byhieg.betterloaddemo;
+package cn.byhieg.betterload;
 
 import org.junit.Test;
 
