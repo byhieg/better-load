@@ -7,7 +7,7 @@ package cn.byhieg.betterload.network;
 
 public interface IResonseListener<T> {
 
-     void onSucess(T response);
+     void onSuccess(T response);
 
      void onFailure(String message);
 }

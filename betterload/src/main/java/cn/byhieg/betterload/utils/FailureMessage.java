@@ -49,7 +49,7 @@ public class FailureMessage implements Serializable{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("=====================\n");
-        sb.append(":::请求失败，状态如下:::\n");
+        sb.append(":::请求失败，状态如下\n");
         sb.append(":::状态码：").append(resultCode).append("\n");
         sb.append(":::失败信息：").append(failureMessage).append("\n");
         sb.append("======================\n");

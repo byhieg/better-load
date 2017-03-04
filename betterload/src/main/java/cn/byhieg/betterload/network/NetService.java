@@ -11,6 +11,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 /**
  * Created by byhieg on 17/3/2.
@@ -46,6 +47,7 @@ public class NetService {
                     build();
 
             retrofit = new Retrofit.Builder().
+                    addConverterFactory(ScalarsConverterFactory.create()).
                     addConverterFactory(GsonConverterFactory.create()).
                     baseUrl(baseUrl).
                     client(okHttpClient).
@@ -88,7 +90,7 @@ public class NetService {
                         failureMessage.setFailureMessage("body为空");
                         resonseListener.onFailure(failureMessage.toString());
                     } else {
-                        resonseListener.onSucess(result);
+                        resonseListener.onSuccess(result);
                     }
 
                 } else {
@@ -138,7 +140,7 @@ public class NetService {
                     failureMessage.setFailureMessage("body为空");
                     resonseListener.onFailure(failureMessage.toString());
                 }else {
-                    resonseListener.onSucess(result);
+                    resonseListener.onSuccess(result);
                 }
             }else {
                 failureMessage.clear();
