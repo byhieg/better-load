@@ -3,6 +3,7 @@ package cn.byhieg.betterload.network;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import cn.byhieg.betterload.download.IDownLoadService;
 import cn.byhieg.betterload.utils.FailureMessage;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -31,6 +32,7 @@ public class NetService {
     }
 
     private static NetService netService;
+    private IDownLoadService downLoadService;
 
     public static NetService getInstance() {
         if (netService == null) {
@@ -59,8 +61,9 @@ public class NetService {
                     baseUrl(baseUrl).
                     client(okHttpClient).
                     build();
-        }
+            downLoadService = retrofit.create(IDownLoadService.class);
 
+        }
         return this;
     }
 
@@ -163,6 +166,11 @@ public class NetService {
         }
 
     }
+
+    public IDownLoadService getDownLoadService(){
+        return downLoadService;
+    }
+
 
 
 
