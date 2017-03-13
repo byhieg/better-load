@@ -30,9 +30,16 @@ public class NetService {
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
     }
 
-    private static NetService netService = new NetService();
+    private static NetService netService;
 
     public static NetService getInstance() {
+        if (netService == null) {
+            synchronized (NetService.class) {
+                if (netService == null) {
+                    netService = new NetService();
+                }
+            }
+        }
         return netService;
     }
 
