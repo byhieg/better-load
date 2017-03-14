@@ -1,8 +1,10 @@
 package cn.byhieg.betterload.download;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import cn.byhieg.betterload.utils.CpuUtils;
 import cn.byhieg.betterload.utils.FailureMessage;
 
 /**
@@ -14,34 +16,68 @@ public class DownLoadRequest {
 
     private DownLoadHandle downLoadHandle;
 
-    private List<DownLoadEntity> list;
+    private DownLoadEntity entity;
     private FailureMessage failMessage;
-
+    private IDownLoadTaskListener taskListener;
     private IDownLoadListener listener;
+    private ExecutorService downloadService;
 
-    public DownLoadRequest(List<DownLoadEntity> list,IDownLoadListener listener){
-        this.list = list;
+
+
+    public DownLoadRequest(DownLoadEntity entity, IDownLoadListener listener) {
+        this.entity = entity;
         this.listener = listener;
         failMessage = new FailureMessage();
+        downLoadHandle = new DownLoadHandle();
+        downloadService = Executors.newFixedThreadPool(CpuUtils.getNumCores() + 1);
     }
 
 
-    public void start(){
-        List<DownLoadEntity> queryList = downLoadHandle.queryDownLoadInfo(list);
-        Iterator it = queryList.iterator();
+    public void start() {
+        entity = downLoadHandle.queryDownLoadInfo(entity);
         long totalFileSize = 0;
         long hasDownSize = 0;
-
-        while (it.hasNext()) {
-            final DownLoadEntity entry = (DownLoadEntity) it.next();
-            hasDownSize += entry.getDownedData();
-            if (entry.getTotal() == 0) {
-                failMessage.clear();
-                failMessage.setFailureMessage("文件读取失败");
-                failMessage.setResultCode(-1);
-                listener.onError(entry,failMessage);
-                return;
-            }
+        hasDownSize += entity.getDownedData();
+        if (entity.getTotal() == 0) {
+            failMessage.clear();
+            failMessage.setFailureMessage("文件读取失败");
+            failMessage.setResultCode(-1);
+            MainThreadImpl.getMainThread().post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onError(entity, failMessage);
+                }
+            });
+            return;
+        } else {
+            totalFileSize = entity.getTotal();
         }
+
+        if (hasDownSize >= totalFileSize) {
+            MainThreadImpl.getMainThread().post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onCompleted();
+                }
+            });
+            return;
+        }
+        taskListener = new DownLoadTaskListenerImpl(listener, totalFileSize, hasDownSize);
+        taskListener.onStart();
+        if (entity.getDownedData() != entity.getTotal()) {
+            createDownLoadTask(entity,0,taskListener);
+        }
+
+    }
+
+
+    private void createDownLoadTask(DownLoadEntity entity,long beginSize,IDownLoadTaskListener downLoadTaskListener) {
+        DownLoadTask downLoadTask;
+
+        downLoadTask = new DownLoadTask.Builder().downLoadEntity(entity).IDownLoadTaskListener
+                (downLoadTaskListener).build();
+
+        downloadService.submit(downLoadTask);
+
     }
 }

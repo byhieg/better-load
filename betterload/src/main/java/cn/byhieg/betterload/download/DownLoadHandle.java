@@ -28,58 +28,54 @@ public class DownLoadHandle {
     private volatile int downLoadCount;
 
 
-    public List<DownLoadEntity> queryDownLoadInfo(List<DownLoadEntity> list) {
-        Iterator iterator = list.iterator();
-        while (iterator.hasNext()) {
-            final DownLoadEntity entity = (DownLoadEntity) iterator.next();
-            entity.setDownedData(0);
-            final Call<ResponseBody> call;
+    public DownLoadEntity queryDownLoadInfo(final DownLoadEntity entity) {
+        entity.setDownedData(0);
+        final Call<ResponseBody> call;
 
-            call = NetService.getInstance().getDownLoadService().getHttpHeader(entity.getUrl(),
-                    "bytes=" + 0 + "-" + 0);
+        call = NetService.getInstance().getDownLoadService().getHttpHeader(entity.getUrl(),
+                "bytes=" + 0 + "-" + 0);
 
-            executeGetFileWork(call, new IGetFileInfoListener() {
-                private int recount = 3;
+        executeGetFileWork(call, new IGetFileInfoListener() {
+            private int recount = 3;
 
-                @Override
-                public void onSuccess(long fileSize) {
-                    entity.setTotal(fileSize);
+            @Override
+            public void onSuccess(long fileSize) {
+                entity.setTotal(fileSize);
+                setCount();
+            }
+
+            @Override
+            public void onFailure(FailureMessage failureMessage) {
+                if (recount <= 0) {
                     setCount();
-                }
-
-                @Override
-                public void onFailure(FailureMessage failureMessage) {
-                    if (recount <= 0) {
-                        setCount();
-                        if (!getFileService.isShutdown()) {
-                            getFileService.shutdown();
-                        }
-                    }else {
-                        recount--;
-                        executeGetFileWork(call,this);
+                    if (!getFileService.isShutdown()) {
+                        getFileService.shutdown();
                     }
+                } else {
+                    recount--;
+                    executeGetFileWork(call, this);
                 }
-            });
-        }
+            }
+        });
 
-        return list;
+
+        return entity;
     }
 
 
-    private void executeGetFileWork(Call<ResponseBody> call,IGetFileInfoListener listener){
-        GetFileInfoTask task = new GetFileInfoTask(call,listener);
+    private void executeGetFileWork(Call<ResponseBody> call, IGetFileInfoListener listener) {
+        GetFileInfoTask task = new GetFileInfoTask(call, listener);
         getFileService.submit(task);
     }
 
 
-    private synchronized void setCount(){
+    private synchronized void setCount() {
         this.downLoadCount++;
     }
 
-    private synchronized int getCount(){
-        return getCount();
+    private synchronized int getCount() {
+        return this.downLoadCount;
     }
-
 
 
 //
