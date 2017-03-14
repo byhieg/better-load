@@ -1,5 +1,7 @@
 package cn.byhieg.betterload.download;
 
+import android.text.TextUtils;
+
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
@@ -32,10 +34,9 @@ public class GetFileInfoTask implements Runnable{
         try {
             response = call.execute();
             if (response.isSuccessful()) {
-                long fileSize = Long.parseLong(response.headers().
-                        get("Content-Range").split("/")[1]);
                 if (listener != null) {
-                    listener.onSuccess(fileSize);
+                    listener.success((!TextUtils.isEmpty(response.headers().get("Content-Range")) &&
+                            !TextUtils.isEmpty(response.headers().get("Content-Length"))), response.code() != 206, response.headers().get("Last-Modified"), Long.parseLong(response.headers().get("Content-Range").split("/")[1]));
                 }
             }else {
                 if (listener != null) {

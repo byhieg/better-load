@@ -9,7 +9,7 @@ import cn.byhieg.betterload.utils.FailureMessage;
 
 public interface IGetFileInfoListener {
 
-    void onSuccess(long fileSize);
+    void success(boolean isSupportMulti, boolean isNew, String modified, Long fileSize);
 
     void onFailure(FailureMessage failureMessage);
 }

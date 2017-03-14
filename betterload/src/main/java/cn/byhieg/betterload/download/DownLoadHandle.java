@@ -1,6 +1,7 @@
 package cn.byhieg.betterload.download;
 
 import android.net.DhcpInfo;
+import android.util.Log;
 
 import java.util.Iterator;
 import java.util.List;
@@ -35,30 +36,10 @@ public class DownLoadHandle {
         call = NetService.getInstance().getDownLoadService().getHttpHeader(entity.getUrl(),
                 "bytes=" + 0 + "-" + 0);
 
-        executeGetFileWork(call, new IGetFileInfoListener() {
-            private int recount = 3;
+        executeGetFileWork(call,new GetFileInfoListener(call,entity));
+        while (!getFileService.isShutdown() && getCount() != 1) {
 
-            @Override
-            public void onSuccess(long fileSize) {
-                entity.setTotal(fileSize);
-                setCount();
-            }
-
-            @Override
-            public void onFailure(FailureMessage failureMessage) {
-                if (recount <= 0) {
-                    setCount();
-                    if (!getFileService.isShutdown()) {
-                        getFileService.shutdown();
-                    }
-                } else {
-                    recount--;
-                    executeGetFileWork(call, this);
-                }
-            }
-        });
-
-
+        }
         return entity;
     }
 
@@ -78,35 +59,35 @@ public class DownLoadHandle {
     }
 
 
-//
-//    private class GetFileInfoListener implements IGetFileInfoListener {
-//        private DownLoadEntity entity;
-//        private Call<ResponseBody> call;
-//        private int recount = 3;
-//
-//        public GetFileInfoListener(Call<ResponseBody> call, DownLoadEntity entity){
-//            this.entity = entity;
-//            this.call = call;
-//        }
-//        @Override
-//        public void onSuccess(long fileSize) {
-//            entity.setTotal(fileSize);
-//            setCount();
-//        }
-//
-//        @Override
-//        public void onFailure(FailureMessage failureMessage) {
-//            if (recount <= 0) {
-//                setCount();
-//                if (!getFileService.isShutdown()) {
-//                    getFileService.shutdown();
-//                }
-//            }else {
-//                recount--;
-//                executeGetFileWork(call,this);
-//            }
-//        }
-//    }
+
+    private class GetFileInfoListener implements IGetFileInfoListener {
+        private DownLoadEntity entity;
+        private Call<ResponseBody> call;
+        private int recount = 3;
+
+        public GetFileInfoListener(Call<ResponseBody> call, DownLoadEntity entity){
+            this.entity = entity;
+            this.call = call;
+        }
+        @Override
+        public void success(boolean isSupportMulti, boolean isNew, String modified, Long fileSize) {
+            entity.setTotal(fileSize);
+            setCount();
+        }
+
+        @Override
+        public void onFailure(FailureMessage failureMessage) {
+            if (recount <= 0) {
+                setCount();
+                if (!getFileService.isShutdown()) {
+                    getFileService.shutdown();
+                }
+            }else {
+                recount--;
+                executeGetFileWork(call,this);
+            }
+        }
+    }
 
 }
 

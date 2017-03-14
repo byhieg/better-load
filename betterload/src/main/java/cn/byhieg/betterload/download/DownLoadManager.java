@@ -12,7 +12,6 @@ import java.util.concurrent.Executors;
 public class DownLoadManager {
 
     private static DownLoadManager downLoadManager;
-    private int threadNum = 1;
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     private DownLoadManager(){}
