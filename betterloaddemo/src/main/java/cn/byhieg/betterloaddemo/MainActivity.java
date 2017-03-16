@@ -1,33 +1,28 @@
 package cn.byhieg.betterloaddemo;
 
-import android.os.Bundle;
 import android.app.Activity;
+import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
+import com.orhanobut.logger.Logger;
+
 import java.io.File;
-import java.io.IOException;
 
 import cn.byhieg.betterload.download.DownLoadEntity;
 import cn.byhieg.betterload.download.DownLoadManager;
 import cn.byhieg.betterload.download.IDownLoadListener;
-import cn.byhieg.betterload.network.IResonseListener;
 import cn.byhieg.betterload.network.NetService;
 import cn.byhieg.betterload.utils.FailureMessage;
-import cn.byhieg.betterloaddemo.bean.FileBean;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
     public Button button;
     public TextView textView;
+    public ProgressBar mProgressBar;
 
 
     @Override
@@ -38,7 +33,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         button.setOnClickListener(this);
         NetService.getInstance().init("http://wx2.sinaimg.cn");
         textView = (TextView) findViewById(R.id.text);
-
+        mProgressBar = (ProgressBar) findViewById(R.id.firstBar);
     }
 
     @Override
@@ -87,7 +82,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         DownLoadManager.getInstance().download(entity, new IDownLoadListener() {
             @Override
             public void onStart(double percent) {
-                textView.setText(percent * 100 + "");
+                textView.setText("准备下载");
+                mProgressBar.setProgress((int)percent * 100);
             }
 
             @Override
@@ -97,8 +93,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
             @Override
             public void onDownloading(double percent) {
-                Log.e("onDownLoading","123");
-                textView.setText(percent * 100 + "");
+                int value = (int)percent * 100;
+                textView.setText(value +"");
+                mProgressBar.setProgress(value);
             }
 
             @Override

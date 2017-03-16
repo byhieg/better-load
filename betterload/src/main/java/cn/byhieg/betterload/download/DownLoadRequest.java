@@ -1,8 +1,7 @@
 package cn.byhieg.betterload.download;
 
-import android.util.Log;
+import com.orhanobut.logger.Logger;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,7 +21,7 @@ public class DownLoadRequest {
     private FailureMessage failMessage;
     private IDownLoadTaskListener taskListener;
     private IDownLoadListener listener;
-//    private ExecutorService downloadService;
+    private ExecutorService downloadService;
 
 
 
@@ -31,7 +30,7 @@ public class DownLoadRequest {
         this.listener = listener;
         failMessage = new FailureMessage();
         downLoadHandle = new DownLoadHandle();
-//        downloadService = Executors.newFixedThreadPool(CpuUtils.getNumCores() + 1);
+        downloadService = Executors.newFixedThreadPool(CpuUtils.getNumCores() + 1);
     }
 
 
@@ -67,6 +66,7 @@ public class DownLoadRequest {
         taskListener = new DownLoadTaskListenerImpl(listener, totalFileSize, hasDownSize);
         taskListener.onStart();
         if (entity.getDownedData() != entity.getTotal()) {
+            entity.setEnd(entity.getTotal() - 1);
             createDownLoadTask(entity,0,taskListener);
         }
 
@@ -77,7 +77,6 @@ public class DownLoadRequest {
         DownLoadTask downLoadTask;
         downLoadTask = new DownLoadTask.Builder().downLoadEntity(entity).IDownLoadTaskListener
                 (downLoadTaskListener).build();
-        new Thread(downLoadTask).start();
-
+        downloadService.submit(downLoadTask);
     }
 }

@@ -1,8 +1,5 @@
 package cn.byhieg.betterload.download;
 
-import android.util.Log;
-import android.webkit.DownloadListener;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +27,7 @@ public class DownLoadTask implements Runnable{
     private long fileSizeDownloaded;
     private long needDownSize;
     private DownLoadEntity entity;
-    private final long CALL_BACK_LENGTH = 1024L;
+    private final long CALL_BACK_LENGTH = 1024 * 1024;
     private FailureMessage failureMessage;
 
 
@@ -40,13 +37,11 @@ public class DownLoadTask implements Runnable{
         this.saveFileName = entity.getSaveName();
         this.needDownSize = entity.getEnd() - (entity.getStart() + entity.getDownedData());
         failureMessage = new FailureMessage();
-
     }
 
 
     @Override
     public void run() {
-        Log.e("aaa", 12 + "");
         call = NetService.getInstance().getDownLoadService().downloadFile(entity.getUrl(),
                 "bytes=" + entity.getStart() + "-" + entity.getEnd());
 
@@ -160,7 +155,6 @@ public class DownLoadTask implements Runnable{
     public static final class Builder{
         private DownLoadEntity entity;
         private IDownLoadTaskListener listener;
-
 
         public Builder downLoadEntity(DownLoadEntity entity) {
             this.entity = entity;
