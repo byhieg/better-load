@@ -58,8 +58,10 @@ public class DownLoadTaskListenerImpl implements IDownLoadTaskListener{
         MainThreadImpl.getMainThread().post(new Runnable() {
             @Override
             public void run() {
-                Log.e("hasDownedSize", hasDownedSize + "");
-                listener.onDownloading((double)hasDownedSize / totalSize);
+                double percent = (double)hasDownedSize / totalSize;
+                listener.onDownloading(percent);
+                Log.e("hasDownedSize", percent + "");
+
             }
         });
     }

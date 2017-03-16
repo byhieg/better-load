@@ -1,5 +1,8 @@
 package cn.byhieg.betterload.download;
 
+import com.orhanobut.logger.Logger;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +13,9 @@ import java.net.SocketTimeoutException;
 import cn.byhieg.betterload.network.NetService;
 import cn.byhieg.betterload.utils.FailureMessage;
 import okhttp3.ResponseBody;
+import okio.BufferedSource;
+import okio.ByteString;
+import okio.Okio;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -27,15 +33,15 @@ public class DownLoadTask implements Runnable{
     private long fileSizeDownloaded;
     private long needDownSize;
     private DownLoadEntity entity;
-    private final long CALL_BACK_LENGTH = 1024 * 1024;
+    private final long CALL_BACK_LENGTH = 1024;
     private FailureMessage failureMessage;
 
 
     public DownLoadTask(DownLoadEntity entity, IDownLoadTaskListener listener) {
         this.entity = entity;
         this.listener = listener;
-        this.saveFileName = entity.getSaveName();
-        this.needDownSize = entity.getEnd() - (entity.getStart() + entity.getDownedData());
+        this.saveFileName = entity.getFileName();
+        this.needDownSize = entity.getEnd() - (entity.getStart() + entity.getLoadedData());
         failureMessage = new FailureMessage();
     }
 
@@ -49,8 +55,9 @@ public class DownLoadTask implements Runnable{
         try{
             Response response = call.execute();
             result = (ResponseBody) response.body();
+            Logger.e(result.bytes().length + "");
             if (response.isSuccessful()) {
-                if (writeToFile(result,entity.getStart(),entity.getDownedData())){
+                if (writeToFile(result,entity.getStart(),entity.getLoadedData())){
                     onCompleted();
                 }
             }else {
@@ -67,53 +74,59 @@ public class DownLoadTask implements Runnable{
 
     private boolean writeToFile(ResponseBody body, long startSet, long mDownedSet) {
         try {
-            File futureStudioIconFile = new File(saveFileName);
-
-            if (!futureStudioIconFile.exists()) {
-                futureStudioIconFile.createNewFile();
+            File tmpFile = new File(saveFileName);
+            if (!tmpFile.exists()) {
+                if(!tmpFile.createNewFile()){
+                    return false;
+                }
             }
-
-            RandomAccessFile oSavedFile = new RandomAccessFile(futureStudioIconFile, "rw");
-
+            RandomAccessFile oSavedFile = new RandomAccessFile(tmpFile, "rwd");
             oSavedFile.seek(startSet + mDownedSet);
-
-            InputStream inputStream = null;
-
-            try {
-                byte[] fileReader = new byte[4096];
-
-                inputStream = body.byteStream();
-
-                while (fileSizeDownloaded < needDownSize) {
-                    int read = inputStream.read(fileReader);
-
-                    if (read == -1) {
-                        break;
+            InputStream inputStream = body.byteStream();
+            while (needDownSize >= 0) {
+                try{
+                    BufferedSource source = Okio.buffer(Okio.source(inputStream));
+                    byte [] bytes = source.readByteArray(1024);
+                    fileSizeDownloaded += bytes.length;
+                    oSavedFile.write(bytes);
+                }finally {
+                    if (inputStream != null) {
+                        inputStream.close();
                     }
-                    oSavedFile.write(fileReader, 0, read);
-
-                    fileSizeDownloaded += read;
-
-                    if (fileSizeDownloaded >= CALL_BACK_LENGTH) {
-                        onDownLoading(fileSizeDownloaded);
-                        needDownSize -= fileSizeDownloaded;
-                        fileSizeDownloaded = 0;
-                    } else {
-                        if (needDownSize < CALL_BACK_LENGTH) {
-                            if (fileSizeDownloaded - 1 == needDownSize) {
-                                onDownLoading(fileSizeDownloaded);
-                                break;
-                            }
-                        }
-                    }
-                }
-                return true;
-            } finally {
-                oSavedFile.close();
-                if (inputStream != null) {
-                    inputStream.close();
                 }
             }
+
+//            try {
+//                inputStream = body.byteStream();
+//                while (fileSizeDownloaded < needDownSize) {
+//                    Logger.e("fileSizeDownloaded = " + fileSizeDownloaded + " needDownSize = " + needDownSize );
+//                    Logger.e("inputstream" + inputStream.available());
+//                    BufferedSource source = Okio.buffer(Okio.source(inputStream));
+//
+//                    oSavedFile.write(baos.toByteArray());
+//
+//                    fileSizeDownloaded += read;
+//                    Logger.e("fileSizeDownloaded = " + fileSizeDownloaded);
+//                    if (fileSizeDownloaded >= CALL_BACK_LENGTH) {
+//                        onDownLoading(fileSizeDownloaded);
+//                        needDownSize -= fileSizeDownloaded;
+//                        fileSizeDownloaded = 0;
+//                    } else {
+//                        if (needDownSize < CALL_BACK_LENGTH) {
+//                            if (fileSizeDownloaded - 1 == needDownSize) {
+//                                onDownLoading(fileSizeDownloaded);
+//                                break;
+//                            }
+//                        }
+//                    }
+//                }
+//                return true;
+//            } finally {
+//                oSavedFile.close();
+//                if (inputStream != null) {
+//                    inputStream.close();
+//                }
+//            }
         } catch (IOException e) {
             if (e instanceof InterruptedIOException && !(e instanceof SocketTimeoutException)) {
                 onCancel();
@@ -148,7 +161,7 @@ public class DownLoadTask implements Runnable{
 
     private void onDownLoading(long downSize){
         listener.onDownLoading(downSize);
-        entity.setDownedData(entity.getDownedData() + downSize);
+        entity.setLoadedData(entity.getLoadedData() + downSize);
     }
 
 

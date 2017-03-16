@@ -8,8 +8,6 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.orhanobut.logger.Logger;
-
 import java.io.File;
 
 import cn.byhieg.betterload.download.DownLoadEntity;
@@ -77,8 +75,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         DownLoadEntity entity = new DownLoadEntity();
         entity.setUrl("http://dlsw.baidu.com/sw-search-sp/soft/70/17456/BaiduAn_Setup_8.1.0.7141.1459396875.exe");
-        entity.setSaveName(Environment.getExternalStorageDirectory().getAbsolutePath() + File
-                .separator + "2.exe");
+        entity.setFileName(Environment.getExternalStorageDirectory().getAbsolutePath() + File
+                .separator + "3.exe");
         DownLoadManager.getInstance().download(entity, new IDownLoadListener() {
             @Override
             public void onStart(double percent) {

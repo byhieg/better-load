@@ -1,7 +1,5 @@
 package cn.byhieg.betterload.download;
 
-import com.orhanobut.logger.Logger;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,7 +36,7 @@ public class DownLoadRequest {
         entity = downLoadHandle.queryDownLoadInfo(entity);
         long totalFileSize = 0;
         long hasDownSize = 0;
-        hasDownSize += entity.getDownedData();
+        hasDownSize += entity.getLoadedData();
         if (entity.getTotal() == 0) {
             failMessage.clear();
             failMessage.setFailureMessage("文件读取失败");
@@ -65,15 +63,16 @@ public class DownLoadRequest {
         }
         taskListener = new DownLoadTaskListenerImpl(listener, totalFileSize, hasDownSize);
         taskListener.onStart();
-        if (entity.getDownedData() != entity.getTotal()) {
+        if (entity.getLoadedData() != entity.getTotal()) {
             entity.setEnd(entity.getTotal() - 1);
-            createDownLoadTask(entity,0,taskListener);
+            entity.setStart(0);
+            createDownLoadTask(entity,taskListener);
         }
 
     }
 
 
-    private void createDownLoadTask(DownLoadEntity entity,long beginSize,IDownLoadTaskListener downLoadTaskListener) {
+    private void createDownLoadTask(DownLoadEntity entity,IDownLoadTaskListener downLoadTaskListener) {
         DownLoadTask downLoadTask;
         downLoadTask = new DownLoadTask.Builder().downLoadEntity(entity).IDownLoadTaskListener
                 (downLoadTaskListener).build();

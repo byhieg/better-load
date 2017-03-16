@@ -1,11 +1,5 @@
 package cn.byhieg.betterload.download;
 
-import android.net.DhcpInfo;
-import android.util.Log;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,7 +24,7 @@ public class DownLoadHandle {
 
 
     public DownLoadEntity queryDownLoadInfo(final DownLoadEntity entity) {
-        entity.setDownedData(0);
+        entity.setLoadedData(0);
         final Call<ResponseBody> call;
 
         call = NetService.getInstance().getDownLoadService().getHttpHeader(entity.getUrl(),
