@@ -2,6 +2,8 @@ package cn.byhieg.betterload.download;
 
 import java.io.Serializable;
 
+import okhttp3.MediaType;
+
 /**
  * Created by byhieg on 17/3/13.
  * Contact with byhieg@gmail.com
@@ -9,20 +11,29 @@ import java.io.Serializable;
 
 public class DownLoadEntity implements Serializable{
 
-    private String saveName;
+    //保存的文件名字
+    private String fileName;
     private String url;
-    private long downedData;
+    private long loadedData;
     private long start;
     private long end;
     private long total;
+    private MediaType mediaType;
 
-
-    public long getDownedData() {
-        return downedData;
+    public MediaType getMediaType() {
+        return mediaType;
     }
 
-    public void setDownedData(long downedData) {
-        this.downedData = downedData;
+    public void setMediaType(MediaType mediaType) {
+        this.mediaType = mediaType;
+    }
+
+    public long getLoadedData() {
+        return loadedData;
+    }
+
+    public void setLoadedData(long loadedData) {
+        this.loadedData = loadedData;
     }
 
     public long getStart() {
@@ -49,12 +60,12 @@ public class DownLoadEntity implements Serializable{
         this.total = total;
     }
 
-    public String getSaveName() {
-        return saveName;
+    public String getFileName() {
+        return fileName;
     }
 
-    public void setSaveName(String saveName) {
-        this.saveName = saveName;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public String getUrl() {

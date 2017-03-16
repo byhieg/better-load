@@ -1,6 +1,6 @@
 package cn.byhieg.betterload.download;
 
-import android.icu.text.RelativeDateTimeFormatter;
+import android.util.Log;
 
 import cn.byhieg.betterload.utils.FailureMessage;
 
@@ -58,7 +58,10 @@ public class DownLoadTaskListenerImpl implements IDownLoadTaskListener{
         MainThreadImpl.getMainThread().post(new Runnable() {
             @Override
             public void run() {
-                listener.onDownloading((double)hasDownedSize / totalSize);
+                double percent = (double)hasDownedSize / totalSize;
+                listener.onDownloading(percent);
+                Log.e("hasDownedSize", percent + "");
+
             }
         });
     }

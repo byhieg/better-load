@@ -1,10 +1,5 @@
 package cn.byhieg.betterload.download;
 
-import android.util.Log;
-import android.webkit.DownloadListener;
-
-import com.orhanobut.logger.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +18,7 @@ import retrofit2.Response;
  * Contact with byhieg@gmail.com
  */
 
-public class DownLoadTask implements Runnable{
+public class DownLoadTask implements Runnable {
 
     private final String TAG = DownLoadTask.class.getSimpleName();
     private String saveFileName;
@@ -32,17 +27,17 @@ public class DownLoadTask implements Runnable{
     private long fileSizeDownloaded;
     private long needDownSize;
     private DownLoadEntity entity;
-    private final long CALL_BACK_LENGTH = 1024L;
+    private long CALL_BACK_LENGTH;
     private FailureMessage failureMessage;
 
 
     public DownLoadTask(DownLoadEntity entity, IDownLoadTaskListener listener) {
         this.entity = entity;
         this.listener = listener;
-        this.saveFileName = entity.getSaveName();
-        this.needDownSize = entity.getEnd() - (entity.getStart() + entity.getDownedData());
+        this.saveFileName = entity.getFileName();
+        this.needDownSize = entity.getEnd() - (entity.getStart() + entity.getLoadedData());
+        this.CALL_BACK_LENGTH = needDownSize / 100;
         failureMessage = new FailureMessage();
-
     }
 
 
@@ -52,15 +47,14 @@ public class DownLoadTask implements Runnable{
                 "bytes=" + entity.getStart() + "-" + entity.getEnd());
 
         ResponseBody result = null;
-        try{
-            Response response = call.execute();
-            result = (ResponseBody) response.body();
-            Logger.e(result.bytes().length + "");
+        try {
+            Response<ResponseBody> response = call.execute();
+            result = response.body();
             if (response.isSuccessful()) {
-                if (writeToFile(result,entity.getStart(),entity.getDownedData())){
+                if (writeToFile(result, entity.getStart(), entity.getLoadedData())) {
                     onCompleted();
                 }
-            }else {
+            } else {
                 onError(new Throwable(response.message()));
             }
         } catch (IOException e) {
@@ -74,18 +68,15 @@ public class DownLoadTask implements Runnable{
 
     private boolean writeToFile(ResponseBody body, long startSet, long mDownedSet) {
         try {
-            File futureStudioIconFile = new File(saveFileName);
-
-            if (!futureStudioIconFile.exists()) {
-                futureStudioIconFile.createNewFile();
+            File tmpFile = new File(saveFileName);
+            if (!tmpFile.exists()) {
+                if (!tmpFile.createNewFile()) {
+                    return false;
+                }
             }
-
-            RandomAccessFile oSavedFile = new RandomAccessFile(futureStudioIconFile, "rw");
-
-            oSavedFile.seek(startSet + mDownedSet);
-
+            RandomAccessFile savedFile = new RandomAccessFile(tmpFile, "rwd");
+            savedFile.seek(startSet + mDownedSet);
             InputStream inputStream = null;
-
             try {
                 byte[] fileReader = new byte[4096];
 
@@ -97,7 +88,7 @@ public class DownLoadTask implements Runnable{
                     if (read == -1) {
                         break;
                     }
-                    oSavedFile.write(fileReader, 0, read);
+                    savedFile.write(fileReader, 0, read);
 
                     fileSizeDownloaded += read;
 
@@ -116,11 +107,14 @@ public class DownLoadTask implements Runnable{
                 }
                 return true;
             } finally {
-                oSavedFile.close();
+
+                savedFile.close();
+
                 if (inputStream != null) {
                     inputStream.close();
                 }
             }
+
         } catch (IOException e) {
             if (e instanceof InterruptedIOException && !(e instanceof SocketTimeoutException)) {
                 onCancel();
@@ -131,50 +125,49 @@ public class DownLoadTask implements Runnable{
         }
     }
 
-    private void onStart(){
+    private void onStart() {
         listener.onStart();
     }
 
-    private void onCancel(){
+    private void onCancel() {
         call.cancel();
         call = null;
         listener.onCancel(entity);
     }
 
-    private void onCompleted(){
+    private void onCompleted() {
         call = null;
         listener.onCompleted(entity);
     }
 
-    private void onError(Throwable throwable){
+    private void onError(Throwable throwable) {
         failureMessage.clear();
         failureMessage.setResultCode(-1);
         failureMessage.setFailureMessage(throwable.getMessage());
-        listener.onError(entity,failureMessage);
+        listener.onError(entity, failureMessage);
     }
 
-    private void onDownLoading(long downSize){
+    private void onDownLoading(long downSize) {
         listener.onDownLoading(downSize);
-        entity.setDownedData(entity.getDownedData() + downSize);
+        entity.setLoadedData(entity.getLoadedData() + downSize);
     }
 
 
-    public static final class Builder{
+    public static final class Builder {
         private DownLoadEntity entity;
         private IDownLoadTaskListener listener;
-
 
         public Builder downLoadEntity(DownLoadEntity entity) {
             this.entity = entity;
             return this;
         }
 
-        public Builder IDownLoadTaskListener(IDownLoadTaskListener downLoadTaskListener){
+        public Builder IDownLoadTaskListener(IDownLoadTaskListener downLoadTaskListener) {
             this.listener = downLoadTaskListener;
             return this;
         }
 
-        public DownLoadTask build(){
+        public DownLoadTask build() {
             if (entity.getUrl().isEmpty()) {
                 throw new IllegalStateException("DownLoad URL required.");
             }

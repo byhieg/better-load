@@ -2,6 +2,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,15 +18,25 @@
         android:id="@+id/download"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="下载"
+        android:text="单任务下载"
         android:layout_centerHorizontal="true"/>
 
     <TextView
         android:id="@+id/text"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="50dp"
         android:layout_below="@id/download"
         android:textSize="16sp"
-        android:textColor="@android:color/white"
-        android:background="@color/colorPrimary"/>
+        android:gravity="center"
+        android:text="下载进度"
+        android:textColor="@android:color/black"
+        android:background="@android:color/white"/>
+
+    <com.github.lzyzsd.circleprogress.DonutProgress
+        android:layout_below="@+id/text"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/donut_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
 </RelativeLayout>
