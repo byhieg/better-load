@@ -3,6 +3,8 @@ package cn.byhieg.betterload.download;
 import android.util.Log;
 import android.webkit.DownloadListener;
 
+import com.orhanobut.logger.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +48,6 @@ public class DownLoadTask implements Runnable{
 
     @Override
     public void run() {
-        Log.e("aaa", 12 + "");
         call = NetService.getInstance().getDownLoadService().downloadFile(entity.getUrl(),
                 "bytes=" + entity.getStart() + "-" + entity.getEnd());
 
@@ -54,6 +55,7 @@ public class DownLoadTask implements Runnable{
         try{
             Response response = call.execute();
             result = (ResponseBody) response.body();
+            Logger.e(result.bytes().length + "");
             if (response.isSuccessful()) {
                 if (writeToFile(result,entity.getStart(),entity.getDownedData())){
                     onCompleted();

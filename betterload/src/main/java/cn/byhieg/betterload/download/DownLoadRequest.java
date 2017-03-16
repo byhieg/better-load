@@ -67,6 +67,7 @@ public class DownLoadRequest {
         taskListener = new DownLoadTaskListenerImpl(listener, totalFileSize, hasDownSize);
         taskListener.onStart();
         if (entity.getDownedData() != entity.getTotal()) {
+            entity.setEnd(entity.getTotal() - 1);
             createDownLoadTask(entity,0,taskListener);
         }
 
