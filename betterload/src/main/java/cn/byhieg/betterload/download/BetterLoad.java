@@ -1,6 +1,5 @@
 package cn.byhieg.betterload.download;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -9,22 +8,22 @@ import java.util.concurrent.Executors;
  * Contact with byhieg@gmail.com
  */
 
-public class DownLoadManager {
+public class BetterLoad {
 
-    private static DownLoadManager downLoadManager;
+    private static BetterLoad betterLoad;
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
-    private DownLoadManager(){}
+    private BetterLoad(){}
 
-    public static DownLoadManager getInstance(){
-        if (downLoadManager == null) {
-            synchronized (DownLoadManager.class) {
-                if (downLoadManager == null) {
-                    downLoadManager = new DownLoadManager();
+    public static BetterLoad getInstance(){
+        if (betterLoad == null) {
+            synchronized (BetterLoad.class) {
+                if (betterLoad == null) {
+                    betterLoad = new BetterLoad();
                 }
             }
         }
-        return downLoadManager;
+        return betterLoad;
     }
 
     public void download(final DownLoadEntity entity, final IDownLoadListener listener) {

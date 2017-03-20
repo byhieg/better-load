@@ -6,7 +6,6 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.lzyzsd.circleprogress.DonutProgress;
@@ -15,7 +14,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 
 import cn.byhieg.betterload.download.DownLoadEntity;
-import cn.byhieg.betterload.download.DownLoadManager;
+import cn.byhieg.betterload.download.BetterLoad;
 import cn.byhieg.betterload.download.IDownLoadListener;
 import cn.byhieg.betterload.network.NetService;
 import cn.byhieg.betterload.utils.FailureMessage;
@@ -44,7 +43,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         entity.setUrl("http://dlsw.baidu.com/sw-search-sp/soft/70/17456/BaiduAn_Setup_8.1.0.7141.1459396875.exe");
         entity.setFileName(Environment.getExternalStorageDirectory().getAbsolutePath() + File
                 .separator + "3.exe");
-        DownLoadManager.getInstance().download(entity, new IDownLoadListener() {
+        BetterLoad.getInstance().download(entity, new IDownLoadListener() {
             @Override
             public void onStart(double percent) {
                 textView.setText("准备下载");

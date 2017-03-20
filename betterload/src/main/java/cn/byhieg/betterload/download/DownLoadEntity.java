@@ -13,11 +13,17 @@ public class DownLoadEntity implements Serializable{
 
     //保存的文件名字
     private String fileName;
+    //下载的url
     private String url;
+    //已经下载的文件大小
     private long loadedData;
+    //开始下载的位置
     private long start;
+    //结束下载的文职
     private long end;
+    //下载文件的总大小
     private long total;
+    //文件的类型
     private MediaType mediaType;
 
     public MediaType getMediaType() {
