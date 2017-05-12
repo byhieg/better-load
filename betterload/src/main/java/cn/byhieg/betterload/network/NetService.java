@@ -1,9 +1,12 @@
 package cn.byhieg.betterload.network;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import cn.byhieg.betterload.download.IDownLoadService;
+import cn.byhieg.betterload.interceptor.HeaderInterceptor;
+import cn.byhieg.betterload.operator.BaseFlatMapOp;
 import cn.byhieg.betterload.utils.FailureMessage;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -11,8 +14,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
+import rx.Observable;
+import rx.Scheduler;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.functions.Function;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by byhieg on 17/3/2.
@@ -25,13 +36,16 @@ public class NetService {
     private OkHttpClient okHttpClient;
     private Retrofit retrofit;
     private HttpLoggingInterceptor loggingInterceptor;
+    private HeaderInterceptor headerInterceptor;
 
     private NetService() {
         loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
     }
 
-    private static NetService netService;
+
+
+    private volatile static NetService netService;
     private IDownLoadService downLoadService;
 
     public static NetService getInstance() {
@@ -48,6 +62,9 @@ public class NetService {
 
     public NetService init(String baseUrl) {
         synchronized (this) {
+            if (baseUrl.charAt(baseUrl.length() - 1) != '/'){
+                baseUrl = baseUrl + "/";
+            }
             okHttpClient = new OkHttpClient.Builder().
                     readTimeout(15, TimeUnit.SECONDS).
                     writeTimeout(10, TimeUnit.SECONDS).
@@ -58,10 +75,35 @@ public class NetService {
             retrofit = new Retrofit.Builder().
                     addConverterFactory(ScalarsConverterFactory.create()).
                     addConverterFactory(GsonConverterFactory.create()).
+                    addCallAdapterFactory(RxJavaCallAdapterFactory.create()).
                     baseUrl(baseUrl).
                     client(okHttpClient).
                     build();
-            downLoadService = retrofit.create(IDownLoadService.class);
+            downLoadService = create(IDownLoadService.class);
+
+        }
+        return this;
+    }
+
+    public NetService init(String baseurl, Map<String, String> headers) {
+        synchronized (this) {
+            headerInterceptor = new HeaderInterceptor(headers);
+            okHttpClient = new OkHttpClient.Builder().
+                    readTimeout(15, TimeUnit.SECONDS).
+                    writeTimeout(10, TimeUnit.SECONDS).
+                    connectTimeout(10, TimeUnit.SECONDS).
+                    addInterceptor(loggingInterceptor).
+                    addInterceptor(headerInterceptor).
+                    build();
+
+            retrofit = new Retrofit.Builder().
+                    addConverterFactory(ScalarsConverterFactory.create()).
+                    addConverterFactory(GsonConverterFactory.create()).
+                    addCallAdapterFactory(RxJavaCallAdapterFactory.create()).
+                    baseUrl(baseurl).
+                    client(okHttpClient).
+                    build();
+            downLoadService = create(IDownLoadService.class);
 
         }
         return this;
@@ -73,7 +115,7 @@ public class NetService {
     }
 
 
-    public <T> void asynRequest(final Call<T> requestCall, final IResonseListener<T> resonseListener) {
+    public <T> void asynRequest(final Call<T> requestCall, final IResponseListener<T> resonseListener) {
 
         final FailureMessage failureMessage = new FailureMessage();
         if (resonseListener == null) {
@@ -125,10 +167,10 @@ public class NetService {
 
     }
 
-    public <T> void syncRequest(final Call<T> requestCall,final IResonseListener<T> resonseListener){
+    public <T> void syncRequest(final Call<T> requestCall,final IResponseListener<T> responseListener){
 
         final FailureMessage failureMessage = new FailureMessage();
-        if (resonseListener == null) {
+        if (responseListener == null) {
             return;
         }
 
@@ -148,24 +190,40 @@ public class NetService {
                     failureMessage.clear();
                     failureMessage.setResultCode(resultCode);
                     failureMessage.setFailureMessage("body为空");
-                    resonseListener.onFailure(failureMessage.toString());
+                    responseListener.onFailure(failureMessage.toString());
                 }else {
-                    resonseListener.onSuccess(result);
+                    responseListener.onSuccess(result);
                 }
             }else {
                 failureMessage.clear();
                 failureMessage.setResultCode(resultCode);
                 failureMessage.setFailureMessage(resultCode + "错误");
-                resonseListener.onFailure(failureMessage.toString());
+                responseListener.onFailure(failureMessage.toString());
             }
         } catch (IOException e) {
             failureMessage.clear();
             failureMessage.setResultCode(-1);
             failureMessage.setFailureMessage(e.getMessage());
-            resonseListener.onFailure(failureMessage.toString());
+            responseListener.onFailure(failureMessage.toString());
         }
 
     }
+//
+     public <T,N> void rxRequest(Observable<T> observable, Subscriber<N> subscriber,
+                                 BaseFlatMapOp<T,N> baseFlatMapOp){
+         observable.subscribeOn(Schedulers.io()).
+                 unsubscribeOn(Schedulers.io()).
+                 flatMap(baseFlatMapOp).
+                 observeOn(AndroidSchedulers.mainThread()).
+                 subscribe(subscriber);
+     }
+
+     public <T> void rxRequest(Observable<T> observable,Subscriber<T> subscriber) {
+         observable.subscribeOn(Schedulers.io()).
+                 unsubscribeOn(Schedulers.io()).
+                 observeOn(AndroidSchedulers.mainThread()).
+                 subscribe(subscriber);
+     }
 
     public IDownLoadService getDownLoadService(){
         return downLoadService;

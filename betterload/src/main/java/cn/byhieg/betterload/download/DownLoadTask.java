@@ -1,5 +1,7 @@
 package cn.byhieg.betterload.download;
 
+import android.util.Log;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,7 +86,6 @@ public class DownLoadTask implements Runnable {
 
                 while (fileSizeDownloaded < needDownSize) {
                     int read = inputStream.read(fileReader);
-
                     if (read == -1) {
                         break;
                     }

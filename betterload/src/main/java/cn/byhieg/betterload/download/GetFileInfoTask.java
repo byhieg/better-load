@@ -36,7 +36,10 @@ public class GetFileInfoTask implements Runnable{
             if (response.isSuccessful()) {
                 if (listener != null) {
                     listener.success((!TextUtils.isEmpty(response.headers().get("Content-Range")) &&
-                            !TextUtils.isEmpty(response.headers().get("Content-Length"))), response.code() != 206, response.headers().get("Last-Modified"), Long.parseLong(response.headers().get("Content-Range").split("/")[1]));
+                            !TextUtils.isEmpty(response.headers().get("Content-Length"))),
+                            response.code() != 206,
+                            response.headers().get("Last-Modified"),
+                            Long.parseLong(response.headers().get("Content-Range").split("/")[1]));
                 }
             }else {
                 if (listener != null) {

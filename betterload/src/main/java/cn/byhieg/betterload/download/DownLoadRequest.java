@@ -34,7 +34,7 @@ public class DownLoadRequest {
 
     public void start() {
         entity = downLoadHandle.queryDownLoadInfo(entity);
-        long totalFileSize = 0;
+        long totalFileSize;
         long hasDownSize = 0;
         hasDownSize += entity.getLoadedData();
         if (entity.getTotal() == 0) {

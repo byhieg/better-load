@@ -5,7 +5,7 @@ package cn.byhieg.betterload.network;
  * Contact with byhieg@gmail.com
  */
 
-public interface IResonseListener<T> {
+public interface IResponseListener<T> {
 
      void onSuccess(T response);
 
